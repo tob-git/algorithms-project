@@ -6,12 +6,22 @@ import pandas as pd
 
 # Common interface for sorting algorithms
 class SortAlgorithm:
-    def sort(self, data):
+    def __init__(self):
+        self.O = ""        # Worst-case complexity
+        self.Theta = ""    # Average-case complexity
+        self.Omega = ""    # Best-case complexity
 
+    def sort(self, data):
         raise NotImplementedError
 
 
 class InsertionSort(SortAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.O = "O(n^2)"
+        self.Theta = "Θ(n^2)"
+        self.Omega = "Ω(n)"
+
     def sort(self, data):
         steps = 0
         for i in range(1, len(data)):
@@ -31,6 +41,12 @@ class InsertionSort(SortAlgorithm):
 
 
 class MergeSort(SortAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.O = "O(n log n)"
+        self.Theta = "Θ(n log n)"
+        self.Omega = "Ω(n log n)"
+
     def sort(self, data):
         self.steps = 0
         self.merge_sort(data, 0, len(data) - 1)
@@ -71,6 +87,12 @@ class MergeSort(SortAlgorithm):
 
 
 class BubbleSort(SortAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.O = "O(n^2)"
+        self.Theta = "Θ(n^2)"
+        self.Omega = "Ω(n)"
+
     def sort(self, data):
         steps = 0
         n = len(data)
@@ -79,11 +101,17 @@ class BubbleSort(SortAlgorithm):
                 steps += 1  # comparison
                 if data[j] > data[j + 1]:
                     data[j], data[j + 1] = data[j + 1], data[j]
-                    steps += 3  # two assignments for swap (a temp variable version would be 3 steps)
+                    steps += 3  # two assignments for swap
         return steps
 
 
 class QuickSort(SortAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.O = "O(n^2)"
+        self.Theta = "Θ(n log n)"
+        self.Omega = "Ω(n log n)"
+
     def sort(self, data):
         self.steps = 0
         self.quick_sort(data, 0, len(data) - 1)
@@ -110,15 +138,21 @@ class QuickSort(SortAlgorithm):
 
 
 class HeapSort(SortAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.O = "O(n log n)"
+        self.Theta = "Θ(n log n)"
+        self.Omega = "Ω(n log n)"
+
     def sort(self, data):
         self.steps = 0
         n = len(data)
 
-        # Build a maxheap.
+        # Build a maxheap
         for i in range(n // 2 - 1, -1, -1):
             self.heapify(data, n, i)
 
-        # One by one extract elements
+        # Extract elements one by one
         for i in range(n - 1, 0, -1):
             data[i], data[0] = data[0], data[i]
             self.steps += 3  # swap steps
@@ -149,7 +183,6 @@ class HeapSort(SortAlgorithm):
             self.steps += 3  # swap steps
             self.heapify(arr, n, largest)
 
-
 # Dictionary of available algorithms
 ALGORITHMS = {
     "insertion": InsertionSort(),
@@ -159,81 +192,135 @@ ALGORITHMS = {
     "heap": HeapSort()
 }
 
+import pandas as pd
 
-def read_data_from_csv(filename):
-    df = pd.read_csv(filename, header=None)
-    # Flatten and convert to list if multiple columns:
+
+def read_data_from_file(filename):
+    # Determine file type based on extension
+    if filename.lower().endswith('.csv'):
+        df = pd.read_csv(filename, header=None)
+    elif filename.lower().endswith(('.xlsx', '.xls')):
+        df = pd.read_excel(filename, header=None)
+    else:
+        raise ValueError("Unsupported file type. Use .csv or .xlsx/.xls files.")
+
+    # Flatten and convert to list if multiple columns
     data = df.values.flatten().tolist()
     return data
 
 
-def generate_random_data(size, min_val=0, max_val=1000):
-    return [random.randint(min_val, max_val) for _ in range(size)]
+def generate_random_data(size):
+    max_val = max(1000, size * 10)
+    return [random.randint(0, max_val) for _ in range(size)]
 
 
-def compare_algorithms(data, algorithm_names):
 
-    results = {}
-    for name in algorithm_names:
-        alg = ALGORITHMS[name]
-        data_copy = data[:]
-        steps = alg.sort(data_copy)
-        results[name] = steps
 
-    # Plot results as a bar chart
-    plt.bar(results.keys(), results.values())
-    plt.xlabel("Algorithms")
-    plt.ylabel("Steps")
-    plt.title("Algorithm Comparison")
+def compare_algorithms(data, algorithm_names, chart_type="growth", split_points=5):
+    n = len(data)
+
+    if chart_type == "growth":
+        # Split data sizes for growth graph
+        sizes = [int(n * i / split_points) for i in range(1, split_points + 1)]
+        results = {name: [] for name in algorithm_names}
+
+        # Collect performance data for each algorithm at different sizes
+        for size in sizes:
+            for name in algorithm_names:
+                alg = ALGORITHMS[name]
+                data_sample = data[:size]
+                steps = alg.sort(data_sample)
+                results[name].append(steps)
+
+        # Plot the growth graph
+        for name, steps in results.items():
+            plt.plot(sizes, steps, marker='o', label=name)
+        plt.xlabel("Data Size (n)")
+        plt.ylabel("Steps")
+        plt.title("Algorithm Comparison (growth)")
+
+    elif chart_type == "nsteps":
+        # Collect total performance data
+        results = {}
+        for name in algorithm_names:
+            alg = ALGORITHMS[name]
+            steps = alg.sort(data[:])
+            results[name] = steps
+
+        # Plot the bar chart
+        plt.bar(results.keys(), results.values())
+        plt.xlabel("Algorithms")
+        plt.ylabel("Total Steps")
+        plt.title("Algorithm Comparison (n of steps)")
+
+
+
+    plt.legend()
     plt.show()
 
-
-def compare_algorithm_with_complexity(algorithm_name, sizes, complexity="nlogn"):
+def compare_algorithm_with_asymptotic_efficiency(data, algorithm_name, split_points=5):
+    n = len(data)
+    sizes = [int(n * i / split_points) for i in range(1, split_points + 1)]
 
     alg = ALGORITHMS[algorithm_name]
     x_vals = []
     y_vals = []
+
+    # Collect actual steps
     for s in sizes:
-        data = generate_random_data(s)
-        steps = alg.sort(data)
+        data_sample = data[:s]
+        steps = alg.sort(data_sample)
         x_vals.append(s)
         y_vals.append(steps)
 
-    # Compute theoretical complexity line
-    # We'll just pick a scale factor so they appear in a comparable range.
-    # For demonstration:
-    # If complexity = nlogn: f(n) = n * log2(n)
-    # If complexity = n2: f(n) = n^2
-    # If complexity = n: f(n) = n
-    # We'll scale them by a small factor c so they're visible on the same chart.
+    # Compute theoretical complexities
+    complexities = {
+        "Worst Case": alg.O,
+        "Average Case": alg.Theta,
+        "Best Case": alg.Omega
+    }
 
-    c = 1
-    if complexity == "n":
-        theoretical = [c * n for n in x_vals]
-    elif complexity == "n2":
-        theoretical = [c * n * n for n in x_vals]
-    elif complexity == "nlogn":
-        theoretical = [c * n * math.log2(n) for n in x_vals]
-    else:
-        theoretical = [c * n for n in x_vals]  # default
+    theoretical = {case: [] for case in complexities}
 
+    # Calculate theoretical values based on complexity functions
+    for case, complexity in complexities.items():
+        for n in x_vals:
+            if complexity == "O(n)":
+                theoretical[case].append(n)
+            elif complexity == "O(n^2)":
+                theoretical[case].append(n ** 2)
+            elif complexity == "O(n log n)":
+                theoretical[case].append(n * math.log2(n))
+            elif complexity == "O(1)":
+                theoretical[case].append(1)
+            else:
+                theoretical[case].append(n)  # Default for unexpected cases
+
+    # Plot the results
     plt.plot(x_vals, y_vals, marker='o', label='Actual Steps')
-    plt.plot(x_vals, theoretical, marker='x', label=f'Theoretical {complexity.upper()}')
+
+    for case, values in theoretical.items():
+        plt.plot(x_vals, values, marker='x', label=f'{case} ({complexities[case]})')
+
     plt.xlabel("Input Size (n)")
     plt.ylabel("Steps")
-    plt.title(f"{algorithm_name.capitalize()} Sort: Actual vs. {complexity.upper()}")
+    plt.title(f"{algorithm_name.capitalize()} Sort: Actual vs. Theoretical Complexity")
     plt.legend()
     plt.show()
-
 
 if __name__ == "__main__":
     # Example usage:
 
     # 1. Compare algorithms on a single dataset
-    data = generate_random_data(1000, 0, 5000)
-    compare_algorithms(data, ["insertion", "merge", "bubble", "quick", "heap"])
+    data = generate_random_data(100000000)
+    #or load data from file xlsx or xls or csv
+    #data = read_data_from_file("data.xlsx")
 
+    compare_algorithms(data, ["insertion", "merge", "quick", "bubble", "heap"], chart_type="growth")
+    compare_algorithms(data, ["insertion", "merge", "quick", "bubble", "heap"], chart_type="nsteps")
     # 2. Compare a single algorithm against its theoretical complexity
-    # Using input sizes: 1000, 2000, 3000, 4000, 5000
-    sizes = [1000, 2000, 3000, 4000, 5000]
-    compare_algorithm_with_complexity("insertion", sizes, complexity="n2")
+    compare_algorithm_with_asymptotic_efficiency(data,"insertion")
+    compare_algorithm_with_asymptotic_efficiency(data, "merge")
+    compare_algorithm_with_asymptotic_efficiency(data, "quick")
+    compare_algorithm_with_asymptotic_efficiency(data, "bubble")
+    compare_algorithm_with_asymptotic_efficiency(data, "heap")
