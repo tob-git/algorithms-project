@@ -2,6 +2,7 @@ import random
 import math
 import matplotlib.pyplot as plt
 import pandas as pd
+from ui import display_plot
 
 
 # Common interface for sorting algorithms
@@ -14,6 +15,134 @@ class SortAlgorithm:
     def sort(self, data):
         raise NotImplementedError
 
+class SelectionSort(SortAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.O = "O(n^2)"
+        self.Theta = "Θ(n^2)"
+        self.Omega = "Ω(n^2)"
+
+    def sort(self, data):
+        steps = 0
+        n = len(data)
+        for i in range(n):
+            min_idx = i
+            for j in range(i + 1, n):
+                steps += 1  # comparison
+                if data[j] < data[min_idx]:
+                    min_idx = j
+            if min_idx != i:
+                data[i], data[min_idx] = data[min_idx], data[i]
+                steps += 3  # swap (read/write)
+        return steps
+
+class ShellSort(SortAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.O = "O(n^2)"
+        self.Theta = "Θ(n log(n)^2)"
+        self.Omega = "Ω(n log(n))"
+
+    def sort(self, data):
+        steps = 0
+        n = len(data)
+        gap = n // 2
+        while gap > 0:
+            for i in range(gap, n):
+                temp = data[i]
+                j = i
+                steps += 1  # initial assignment
+                while j >= gap and data[j - gap] > temp:
+                    steps += 2  # comparison + assignment
+                    data[j] = data[j - gap]
+                    j -= gap
+                data[j] = temp
+                steps += 1  # final assignment
+            gap //= 2
+        return steps
+
+class CountingSort(SortAlgorithm):
+
+    def __init__(self):
+        super().__init__()
+        self.O = "O(n + k)"
+        self.Theta = "Θ(n + k)"
+        self.Omega = "Ω(n + k)"
+
+    def sort(self, data):
+        steps = 0
+        if not data:
+            return steps
+
+        max_val = max(data)
+        steps += len(data)  # for max computation
+
+        count = [0] * (max_val + 1)
+        steps += max_val + 1  # initialization
+
+        for num in data:
+            count[num] += 1
+            steps += 1  # counting
+
+        output_idx = 0
+        for i in range(len(count)):
+            while count[i] > 0:
+                data[output_idx] = i
+                count[i] -= 1
+                output_idx += 1
+                steps += 2  # assignment + count decrement
+
+        return steps
+
+class RadixSort(SortAlgorithm):
+    def __init__(self):
+        super().__init__()
+        self.O = "O(nk)"
+        self.Theta = "Θ(nk)"
+        self.Omega = "Ω(nk)"
+
+    def counting_sort(self, data, exp, steps):
+        n = len(data)
+        output = [0] * n
+        count = [0] * 10
+        steps += 10  # initialization
+
+        for i in range(n):
+            index = (data[i] // exp) % 10
+            count[index] += 1
+            steps += 2  # calculation + count increment
+
+        for i in range(1, 10):
+            count[i] += count[i - 1]
+            steps += 1  # cumulative sum
+
+        for i in range(n - 1, -1, -1):
+            index = (data[i] // exp) % 10
+            output[count[index] - 1] = data[i]
+            count[index] -= 1
+            steps += 3  # calculations and assignments
+
+        for i in range(n):
+            data[i] = output[i]
+            steps += 1  # final assignment
+
+        return steps
+
+    def sort(self, data):
+        steps = 0
+        if not data:
+            return steps
+
+        max_val = max(data)
+        steps += len(data)  # finding max
+
+        exp = 1
+        while max_val // exp > 0:
+            steps = self.counting_sort(data, exp, steps)
+            exp *= 10
+            steps += 1  # exp update
+
+        return steps
 
 class InsertionSort(SortAlgorithm):
     def __init__(self):
@@ -189,10 +318,12 @@ ALGORITHMS = {
     "merge": MergeSort(),
     "bubble": BubbleSort(),
     "quick": QuickSort(),
-    "heap": HeapSort()
+    "heap": HeapSort(),
+    "selection": SelectionSort(),
+    "shell": ShellSort(),
+    "counting": CountingSort(),
+    "radix": RadixSort()
 }
-
-import pandas as pd
 
 
 def read_data_from_file(filename):
@@ -309,18 +440,49 @@ def compare_algorithm_with_asymptotic_efficiency(data, algorithm_name, split_poi
     plt.show()
 
 if __name__ == "__main__":
-    # Example usage:
+    # Select operation
+    print("Choose the operation:")
+    print("1. Compare algorithms on a single dataset")
+    print("2. Compare a single algorithm against its theoretical complexity")
+    choice = input("Enter your choice (1 or 2): ")
 
-    # 1. Compare algorithms on a single dataset
-    data = generate_random_data(100000000)
-    #or load data from file xlsx or xls or csv
-    #data = read_data_from_file("data.xlsx")
+    # Select data source
+    print("Choose the data source:")
+    print("1. Generate random data")
+    print("2. Load data from file")
+    data_choice = input("Enter your choice (1 or 2): ")
 
-    compare_algorithms(data, ["insertion", "merge", "quick", "bubble", "heap"], chart_type="growth")
-    compare_algorithms(data, ["insertion", "merge", "quick", "bubble", "heap"], chart_type="nsteps")
-    # 2. Compare a single algorithm against its theoretical complexity
-    compare_algorithm_with_asymptotic_efficiency(data,"insertion")
-    compare_algorithm_with_asymptotic_efficiency(data, "merge")
-    compare_algorithm_with_asymptotic_efficiency(data, "quick")
-    compare_algorithm_with_asymptotic_efficiency(data, "bubble")
-    compare_algorithm_with_asymptotic_efficiency(data, "heap")
+    if data_choice == "1":
+        size = int(input("Enter the size of the data: "))
+        data = generate_random_data(size)
+    else:
+        filename = input("Enter the file name (with extension): ")
+        data = read_data_from_file(filename)
+
+    # Execute selected operation
+    if choice == "1":
+        print("Available algorithms:", ", ".join(ALGORITHMS.keys()))
+        algorithms = input("Enter the algorithms separated by commas (e.g., insertion,merge,quick): ").split(",")
+        algorithms = [algo.strip().lower() for algo in algorithms]
+        print("Chart Type Options:")
+        print("1 - Growth")
+        print("2 - Number of Steps (nsteps)")
+
+        # Get user input
+        user_input = input("Enter chart type (1 for Growth, 2 for Number of Steps): ").strip()
+
+        # Map input to chart types
+        if user_input == "1":
+            chart_type = "growth"
+        elif user_input == "2":
+            chart_type = "nsteps"
+        else:
+            chart_type = None
+            print("Invalid selection. Please enter 1 or 2.")
+        compare_algorithms(data, algorithms, chart_type)
+    elif choice == "2":
+        print("Available algorithms:", ", ".join(ALGORITHMS.keys()))
+        algorithm = input("Enter the algorithm (e.g., insertion, merge, quick): ")
+        compare_algorithm_with_asymptotic_efficiency(data, algorithm)
+    else:
+        print("Invalid choice!")
