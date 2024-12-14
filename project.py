@@ -255,7 +255,7 @@ def generate_random_data(size):
     max_val = max(1000, size * 10)
     return [random.randint(0, max_val) for _ in range(size)]
 
-def compare_algorithms(data, algorithm_names, chart_type="growth", split_points=20, gui_root=None):
+def compare_algorithms(data, selected_algs, chart_type="growth", split_points=20, gui_root=None):
     n = len(data)
     is_gui = gui_root is not None
     global current_canvas
@@ -274,12 +274,14 @@ def compare_algorithms(data, algorithm_names, chart_type="growth", split_points=
     if chart_type == "growth":
         # Split data sizes for growth graph
         sizes = [int(n * i / split_points) for i in range(1, split_points + 1)]
-        results = {name: [] for name in algorithm_names}
+        results = {name: [] for name in selected_algs}
 
         # Collect performance data for each algorithm at different sizes
         for size in sizes:
-            for name in algorithm_names:
+            for name in selected_algs:
+                print(data)
                 alg = ALGORITHMS[name]
+                #as the data is a list of integers, we dont need to deep copy it
                 data_sample = data[:size]
                 steps = alg.sort(data_sample)
                 results[name].append(steps)
@@ -310,7 +312,7 @@ def compare_algorithms(data, algorithm_names, chart_type="growth", split_points=
     elif chart_type == "nsteps":
         # Collect total performance data
         results = {}
-        for name in algorithm_names:
+        for name in selected_algs:
             alg = ALGORITHMS[name]
             steps = alg.sort(data[:])
             results[name] = steps
@@ -434,8 +436,8 @@ if __name__ == "__main__":
     # Execute selected operation
     if choice == "1":
         print("Available algorithms:", ", ".join(ALGORITHMS.keys()))
-        algorithms = input("Enter the algorithms separated by commas (e.g., insertion,merge,quick): ").split(",")
-        algorithms = [algo.strip().lower() for algo in algorithms]
+        selected_algs = input("Enter the algorithms separated by commas (e.g., insertion,merge,quick): ").split(",")
+        selected_algs = [algo.strip().lower() for algo in selected_algs]
         print("Chart Type Options:")
         print("1 - Growth")
         print("2 - Number of Steps (nsteps)")
@@ -451,7 +453,7 @@ if __name__ == "__main__":
         else:
             chart_type = None
             print("Invalid selection. Please enter 1 or 2.")
-        compare_algorithms(data, algorithms, chart_type)
+        compare_algorithms(data, selected_algs, chart_type)
     elif choice == "2":
         print("Available algorithms:", ", ".join(ALGORITHMS.keys()))
         algorithm = input("Enter the algorithm: ").strip().lower()
