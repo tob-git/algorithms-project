@@ -1,51 +1,54 @@
-from project import read_data_from_file, generate_random_data, compare_algorithms, compare_algorithm_with_asymptotic_efficiency
+from project import read_data_from_file, generate_random_data, compare_algorithms, compare_algorithm_with_asymptotic_efficiency, ALGORITHMS
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-
-def display_plot(fig):
-    global canvas
-    if canvas:
-        canvas.get_tk_widget().pack_forget()
-
-    canvas = FigureCanvasTkAgg(fig, master=plot_frame)
-    canvas.draw()
-    canvas.get_tk_widget().pack()
-
-# Setup the Tkinter GUI
-root = tk.Tk()
-root.title("Algorithm Comparison Tool")
-root.geometry("800x600")
-
-# Add a Frame for the Plot
-plot_frame = ttk.Frame(root)
-plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-# Test the Plot Function
-data = list(range(1, 1000))
-compare_algorithms(data, ["insertion", "merge", "quick"], chart_type="growth")
-
 def update_algorithm_selection():
+    global chart_type_frame
+
+    # Clear previous widgets
     for widget in algorithms_frame.winfo_children():
         widget.destroy()
 
     if compare_type_var.get() == "algorithms":
+        # Create checkboxes for algorithms
         for alg in algorithms_list:
             alg_var[alg] = tk.BooleanVar()
-            tk.Checkbutton(algorithms_frame, text=alg.capitalize(), variable=alg_var[alg]).pack(anchor="w")
-        chart_type_label.pack(pady=5)
-        growth_radio.pack(anchor="w")
-        nsteps_radio.pack(anchor="w")
+            tk.Checkbutton(
+                algorithms_frame, text=alg.capitalize(), variable=alg_var[alg]
+            ).pack(side="left", padx=5)
+
+        # Create and pack chart type frame
+        chart_type_frame = tk.Frame(algorithms_frame)
+        chart_type_frame.pack(pady=10, anchor="w")
+
+        # Add label and radio buttons for chart type selection
+        tk.Label(chart_type_frame, text="Chart Type (for comparing algorithms)").pack(
+            side="left", padx=10
+        )
+
+        # Initialize chart type radio buttons
+        growth_radio = tk.Radiobutton(
+            chart_type_frame, text="Growth", variable=chart_type_var, value="growth"
+        )
+        growth_radio.pack(side="left", padx=5)
+
+        nsteps_radio = tk.Radiobutton(
+            chart_type_frame, text="N Steps", variable=chart_type_var, value="nsteps"
+        )
+        nsteps_radio.pack(side="left", padx=5)
     else:
-        selected_algorithm.set("insertion")
+
+        # Create radio buttons for algorithms
         for alg in algorithms_list:
-            tk.Radiobutton(algorithms_frame, text=alg.capitalize(), variable=selected_algorithm, value=alg).pack(
-                anchor="w")
-        chart_type_label.pack_forget()
-        growth_radio.pack_forget()
-        nsteps_radio.pack_forget()
+            tk.Radiobutton(
+                algorithms_frame,
+                text=alg.capitalize(),
+                variable=selected_algorithm,
+                value=alg,
+            ).pack(side="left", padx=5)
+
 
 
 # File selection
@@ -56,6 +59,7 @@ def open_file():
 
 # Run comparison
 def run_comparison():
+    print("Running comparison")
     try:
         if use_file_var.get() and not file_label.cget("text"):
             messagebox.showerror("Error", "Please select a data file.")
@@ -69,13 +73,13 @@ def run_comparison():
             if len(selected_algs) < 2:
                 messagebox.showerror("Error", "Please select at least two algorithms.")
                 return
-            compare_algorithms(data, selected_algs, chart_type_var.get())
+            compare_algorithms(data, selected_algs, chart_type_var.get(), gui_root=root)
 
         elif compare_type_var.get() == "asymptotic":
             if not selected_algorithm.get():
-                messagebox.showerror("Error", "Please select an algorithm.")
+                messagebox.showerror("Error", "Please select an algorithm.", gui_root=root)
                 return
-            compare_algorithm_with_asymptotic_efficiency(data, selected_algorithm.get())
+            compare_algorithm_with_asymptotic_efficiency(data, selected_algorithm.get(), gui_root=root)
     except ValueError:
         messagebox.showerror("Error", "Please enter a valid data size.")
 
@@ -109,23 +113,15 @@ tk.Radiobutton(root, text="Compare with Asymptotic Efficiency", variable=compare
                command=update_algorithm_selection).pack()
 
 # Algorithm Selection
-algorithms_list = ["insertion", "merge", "quick", "bubble", "heap"]
+algorithms_list = ALGORITHMS.keys()
 alg_var = {}
-selected_algorithm = tk.StringVar()
+selected_algorithm = tk.StringVar(value="insertion")
+
 
 algorithms_frame = tk.Frame(root)
 algorithms_frame.pack(pady=10)
 
-# Chart Type
-chart_type_label = tk.Label(root, text="Chart Type (for comparing algorithms)")
-chart_type_label.pack(pady=5)
-
 chart_type_var = tk.StringVar(value="growth")
-growth_radio = tk.Radiobutton(root, text="Growth", variable=chart_type_var, value="growth")
-growth_radio.pack(anchor="w")
-
-nsteps_radio = tk.Radiobutton(root, text="N Steps", variable=chart_type_var, value="nsteps")
-nsteps_radio.pack(anchor="w")
 
 # Run Button
 run_btn = tk.Button(root, text="Run Comparison", command=run_comparison)

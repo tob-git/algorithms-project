@@ -2,7 +2,8 @@ import random
 import math
 import matplotlib.pyplot as plt
 import pandas as pd
-from ui import display_plot
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 # Common interface for sorting algorithms
@@ -18,9 +19,9 @@ class SortAlgorithm:
 class SelectionSort(SortAlgorithm):
     def __init__(self):
         super().__init__()
-        self.O = "O(n^2)"
-        self.Theta = "Θ(n^2)"
-        self.Omega = "Ω(n^2)"
+        self.O = "(n^2)"
+        self.Theta = "(n^2)"
+        self.Omega = "(n^2)"
 
     def sort(self, data):
         steps = 0
@@ -39,9 +40,9 @@ class SelectionSort(SortAlgorithm):
 class ShellSort(SortAlgorithm):
     def __init__(self):
         super().__init__()
-        self.O = "O(n^2)"
-        self.Theta = "Θ(n log(n)^2)"
-        self.Omega = "Ω(n log(n))"
+        self.O = "(n^2)"
+        self.Theta = "(n log(n)^2)"
+        self.Omega = "(n log(n))"
 
     def sort(self, data):
         steps = 0
@@ -61,95 +62,12 @@ class ShellSort(SortAlgorithm):
             gap //= 2
         return steps
 
-class CountingSort(SortAlgorithm):
-
-    def __init__(self):
-        super().__init__()
-        self.O = "O(n + k)"
-        self.Theta = "Θ(n + k)"
-        self.Omega = "Ω(n + k)"
-
-    def sort(self, data):
-        steps = 0
-        if not data:
-            return steps
-
-        max_val = max(data)
-        steps += len(data)  # for max computation
-
-        count = [0] * (max_val + 1)
-        steps += max_val + 1  # initialization
-
-        for num in data:
-            count[num] += 1
-            steps += 1  # counting
-
-        output_idx = 0
-        for i in range(len(count)):
-            while count[i] > 0:
-                data[output_idx] = i
-                count[i] -= 1
-                output_idx += 1
-                steps += 2  # assignment + count decrement
-
-        return steps
-
-class RadixSort(SortAlgorithm):
-    def __init__(self):
-        super().__init__()
-        self.O = "O(nk)"
-        self.Theta = "Θ(nk)"
-        self.Omega = "Ω(nk)"
-
-    def counting_sort(self, data, exp, steps):
-        n = len(data)
-        output = [0] * n
-        count = [0] * 10
-        steps += 10  # initialization
-
-        for i in range(n):
-            index = (data[i] // exp) % 10
-            count[index] += 1
-            steps += 2  # calculation + count increment
-
-        for i in range(1, 10):
-            count[i] += count[i - 1]
-            steps += 1  # cumulative sum
-
-        for i in range(n - 1, -1, -1):
-            index = (data[i] // exp) % 10
-            output[count[index] - 1] = data[i]
-            count[index] -= 1
-            steps += 3  # calculations and assignments
-
-        for i in range(n):
-            data[i] = output[i]
-            steps += 1  # final assignment
-
-        return steps
-
-    def sort(self, data):
-        steps = 0
-        if not data:
-            return steps
-
-        max_val = max(data)
-        steps += len(data)  # finding max
-
-        exp = 1
-        while max_val // exp > 0:
-            steps = self.counting_sort(data, exp, steps)
-            exp *= 10
-            steps += 1  # exp update
-
-        return steps
-
 class InsertionSort(SortAlgorithm):
     def __init__(self):
         super().__init__()
-        self.O = "O(n^2)"
-        self.Theta = "Θ(n^2)"
-        self.Omega = "Ω(n)"
+        self.O = "(n^2)"
+        self.Theta = "(n^2)"
+        self.Omega = "(n)"
 
     def sort(self, data):
         steps = 0
@@ -168,13 +86,12 @@ class InsertionSort(SortAlgorithm):
             steps += 1  # final assignment
         return steps
 
-
 class MergeSort(SortAlgorithm):
     def __init__(self):
         super().__init__()
-        self.O = "O(n log n)"
-        self.Theta = "Θ(n log n)"
-        self.Omega = "Ω(n log n)"
+        self.O = "(n log n)"
+        self.Theta = "(n log n)"
+        self.Omega = "(n log n)"
 
     def sort(self, data):
         self.steps = 0
@@ -214,13 +131,12 @@ class MergeSort(SortAlgorithm):
             k += 1
             self.steps += 1
 
-
 class BubbleSort(SortAlgorithm):
     def __init__(self):
         super().__init__()
-        self.O = "O(n^2)"
-        self.Theta = "Θ(n^2)"
-        self.Omega = "Ω(n)"
+        self.O = "(n^2)"
+        self.Theta = "(n^2)"
+        self.Omega = "(n)"
 
     def sort(self, data):
         steps = 0
@@ -233,13 +149,12 @@ class BubbleSort(SortAlgorithm):
                     steps += 3  # two assignments for swap
         return steps
 
-
 class QuickSort(SortAlgorithm):
     def __init__(self):
         super().__init__()
-        self.O = "O(n^2)"
-        self.Theta = "Θ(n log n)"
-        self.Omega = "Ω(n log n)"
+        self.O = "(n^2)"
+        self.Theta = "(n log n)"
+        self.Omega = "(n log n)"
 
     def sort(self, data):
         self.steps = 0
@@ -265,13 +180,12 @@ class QuickSort(SortAlgorithm):
         self.steps += 3  # final swap steps
         return i + 1
 
-
 class HeapSort(SortAlgorithm):
     def __init__(self):
         super().__init__()
-        self.O = "O(n log n)"
-        self.Theta = "Θ(n log n)"
-        self.Omega = "Ω(n log n)"
+        self.O = "(n log n)"
+        self.Theta = "(n log n)"
+        self.Omega = "(n log n)"
 
     def sort(self, data):
         self.steps = 0
@@ -320,12 +234,10 @@ ALGORITHMS = {
     "quick": QuickSort(),
     "heap": HeapSort(),
     "selection": SelectionSort(),
-    "shell": ShellSort(),
-    "counting": CountingSort(),
-    "radix": RadixSort()
+    "shell": ShellSort()
 }
 
-
+current_canvas = None
 def read_data_from_file(filename):
     # Determine file type based on extension
     if filename.lower().endswith('.csv'):
@@ -339,16 +251,25 @@ def read_data_from_file(filename):
     data = df.values.flatten().tolist()
     return data
 
-
 def generate_random_data(size):
     max_val = max(1000, size * 10)
     return [random.randint(0, max_val) for _ in range(size)]
 
-
-
-
-def compare_algorithms(data, algorithm_names, chart_type="growth", split_points=5):
+def compare_algorithms(data, algorithm_names, chart_type="growth", split_points=20, gui_root=None):
     n = len(data)
+    is_gui = gui_root is not None
+    global current_canvas
+
+    # Create figure and axis
+    if is_gui:
+        # Clear the old canvas if it exists
+        if current_canvas is not None:
+            current_canvas.get_tk_widget().pack_forget()
+            current_canvas.get_tk_widget().destroy()
+        fig = Figure(figsize=(5, 4), dpi=100)
+        ax = fig.add_subplot(111)
+    else:
+        fig, ax = plt.subplots(figsize=(8, 6))
 
     if chart_type == "growth":
         # Split data sizes for growth graph
@@ -364,11 +285,27 @@ def compare_algorithms(data, algorithm_names, chart_type="growth", split_points=
                 results[name].append(steps)
 
         # Plot the growth graph
-        for name, steps in results.items():
-            plt.plot(sizes, steps, marker='o', label=name)
-        plt.xlabel("Data Size (n)")
-        plt.ylabel("Steps")
-        plt.title("Algorithm Comparison (growth)")
+        styles = ['-', '--', '-.', ':', (0, (5, 10)), (0, (1, 1)), (0, (3, 5, 1, 5))]
+        colors = ['r', 'g', 'b', 'm', 'c', 'y', 'k']
+        markers = ['o', 's', 'D', '^', 'v', 'x', '*']
+        alpha_value = 0.7
+
+        # Plotting
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        for idx, (name, steps) in enumerate(results.items()):
+            ax.plot(
+                sizes, steps,
+                linestyle=styles[idx % len(styles)],
+                color=colors[idx % len(colors)],
+                marker=markers[idx % len(markers)],
+                alpha=alpha_value,
+                label=name
+            )
+        ax.set_xlabel("Data Size (n)")
+        ax.set_ylabel("Steps")
+        ax.set_title("Algorithm Comparison (growth)")
+        ax.legend()
 
     elif chart_type == "nsteps":
         # Collect total performance data
@@ -379,17 +316,21 @@ def compare_algorithms(data, algorithm_names, chart_type="growth", split_points=
             results[name] = steps
 
         # Plot the bar chart
-        plt.bar(results.keys(), results.values())
-        plt.xlabel("Algorithms")
-        plt.ylabel("Total Steps")
-        plt.title("Algorithm Comparison (n of steps)")
+        ax.bar(results.keys(), results.values())
+        ax.set_xlabel("Algorithms")
+        ax.set_ylabel("Total Steps")
+        ax.set_title("Algorithm Comparison (n of steps)")
 
+    # Display the plot
+    if is_gui:
+        # Embed the new plot in Tkinter
+        current_canvas = FigureCanvasTkAgg(fig, master=gui_root)
+        current_canvas.draw()
+        current_canvas.get_tk_widget().pack(pady=10, expand=True, fill="both")
+    else:
+        plt.show()
 
-
-    plt.legend()
-    plt.show()
-
-def compare_algorithm_with_asymptotic_efficiency(data, algorithm_name, split_points=5):
+def compare_algorithm_with_asymptotic_efficiency(data, algorithm_name, split_points=20, gui_root=None):
     n = len(data)
     sizes = [int(n * i / split_points) for i in range(1, split_points + 1)]
 
@@ -416,29 +357,60 @@ def compare_algorithm_with_asymptotic_efficiency(data, algorithm_name, split_poi
     # Calculate theoretical values based on complexity functions
     for case, complexity in complexities.items():
         for n in x_vals:
-            if complexity == "O(n)":
+            if complexity == "(n)":
                 theoretical[case].append(n)
-            elif complexity == "O(n^2)":
+            elif complexity == "(n^2)":
                 theoretical[case].append(n ** 2)
-            elif complexity == "O(n log n)":
+            elif complexity == "(n log n)":
                 theoretical[case].append(n * math.log2(n))
-            elif complexity == "O(1)":
+            elif complexity == "(1)":
                 theoretical[case].append(1)
             else:
                 theoretical[case].append(n)  # Default for unexpected cases
 
-    # Plot the results
-    plt.plot(x_vals, y_vals, marker='o', label='Actual Steps')
+    # Create figure and axis
+    is_gui = gui_root is not None
+    global current_canvas
 
-    for case, values in theoretical.items():
-        plt.plot(x_vals, values, marker='x', label=f'{case} ({complexities[case]})')
+    if is_gui:
+        # Clear old canvas if exists
+        if current_canvas is not None:
+            current_canvas.get_tk_widget().pack_forget()
+            current_canvas.get_tk_widget().destroy()
+        fig = Figure(figsize=(5, 4), dpi=100)
+        ax = fig.add_subplot(111)
+    else:
+        fig, ax = plt.subplots(figsize=(8, 6))
 
-    plt.xlabel("Input Size (n)")
-    plt.ylabel("Steps")
-    plt.title(f"{algorithm_name.capitalize()} Sort: Actual vs. Theoretical Complexity")
-    plt.legend()
-    plt.show()
+    # Define a small epsilon value for offsets
 
+
+    # Plot the actual steps
+    ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='b', label='Actual Steps')
+
+    # Use different styles and apply offsets for theoretical lines
+    styles = ['--', '-.', ':']
+    colors = ['r', 'g', 'm']
+    alpha_value = 0.7
+
+    # Apply offsets
+    for idx, (case, values) in enumerate(theoretical.items()):
+
+        ax.plot(x_vals, values, linestyle=styles[idx % len(styles)],
+                color=colors[idx % len(colors)], alpha=alpha_value,
+                marker='x', label=f'{case} ({complexities[case]})')
+
+    ax.set_xlabel("Input Size (n)")
+    ax.set_ylabel("Steps")
+    ax.set_title(f"{algorithm_name.capitalize()} Sort: Actual vs. Theoretical Complexity")
+    ax.legend()
+
+    if is_gui:
+        current_canvas = FigureCanvasTkAgg(fig, master=gui_root)
+        current_canvas.draw()
+        current_canvas.get_tk_widget().pack(pady=10)
+    else:
+        plt.show()
 if __name__ == "__main__":
     # Select operation
     print("Choose the operation:")
@@ -482,7 +454,7 @@ if __name__ == "__main__":
         compare_algorithms(data, algorithms, chart_type)
     elif choice == "2":
         print("Available algorithms:", ", ".join(ALGORITHMS.keys()))
-        algorithm = input("Enter the algorithm (e.g., insertion, merge, quick): ")
+        algorithm = input("Enter the algorithm: ").strip().lower()
         compare_algorithm_with_asymptotic_efficiency(data, algorithm)
     else:
         print("Invalid choice!")
