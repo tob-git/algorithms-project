@@ -236,9 +236,9 @@ ALGORITHMS = {
     "selection": SelectionSort(),
     "shell": ShellSort()
 }
-
 current_canvas = None
 def read_data_from_file(filename):
+
     # Determine file type based on extension
     if filename.lower().endswith('.csv'):
         df = pd.read_csv(filename, header=None)
@@ -279,9 +279,8 @@ def compare_algorithms(data, selected_algs, chart_type="growth", split_points=20
         # Collect performance data for each algorithm at different sizes
         for size in sizes:
             for name in selected_algs:
-                print(data)
                 alg = ALGORITHMS[name]
-                #as the data is a list of integers, we dont need to deep copy it
+                #as the data is a list of integers, we don't need to deep copy it
                 data_sample = data[:size]
                 steps = alg.sort(data_sample)
                 results[name].append(steps)
@@ -413,50 +412,88 @@ def compare_algorithm_with_asymptotic_efficiency(data, algorithm_name, split_poi
         current_canvas.get_tk_widget().pack(pady=10)
     else:
         plt.show()
+
+def validate_choice(prompt, options):
+    while True:
+        choice = input(prompt).strip()
+        if choice in options:
+            return choice
+        print(f"Invalid input. Please choose from {', '.join(options)}.")
+
+def validate_positive_int(prompt):
+    while True:
+        try:
+            value = int(input(prompt).strip())
+            if value > 0:
+                return value
+            print("The value must be a positive integer.")
+        except ValueError:
+            print("Please enter a valid integer.")
+
+def validate_filename(prompt):
+    while True:
+        filename = input(prompt).strip()
+        if filename:
+            return filename
+        print("Filename cannot be empty.")
+
+def validate_algorithms(prompt, available_algs, min_count=1, exact_count=None):
+    while True:
+        algs = input(prompt).strip().lower().split(",")
+        selected_algs = [alg.strip() for alg in algs if alg.strip()]
+
+        if exact_count and len(selected_algs) != exact_count:
+            print(f"You must choose exactly {exact_count} algorithm(s).")
+        elif  all(alg in available_algs for alg in selected_algs):
+            if len(selected_algs) < min_count:
+                print(f"You must choose at least {min_count} algorithm(s).")
+            else:
+                return selected_algs
+        else:
+            print(f"Invalid algorithm(s). Available algorithms are: {', '.join(available_algs)}.")
+
+
 if __name__ == "__main__":
-    # Select operation
     print("Choose the operation:")
     print("1. Compare algorithms on a single dataset")
     print("2. Compare a single algorithm against its theoretical complexity")
-    choice = input("Enter your choice (1 or 2): ")
+    choice = validate_choice("Enter your choice (1 or 2): ", ["1", "2"])
 
     # Select data source
     print("Choose the data source:")
     print("1. Generate random data")
     print("2. Load data from file")
-    data_choice = input("Enter your choice (1 or 2): ")
+    data_choice = validate_choice("Enter your choice (1 or 2): ", ["1", "2"])
 
     if data_choice == "1":
-        size = int(input("Enter the size of the data: "))
+        size = validate_positive_int("Enter the size of the data: ")
         data = generate_random_data(size)
     else:
-        filename = input("Enter the file name (with extension): ")
+        filename = validate_filename("Enter the file name (with extension): ")
         data = read_data_from_file(filename)
 
     # Execute selected operation
     if choice == "1":
         print("Available algorithms:", ", ".join(ALGORITHMS.keys()))
-        selected_algs = input("Enter the algorithms separated by commas (e.g., insertion,merge,quick): ").split(",")
-        selected_algs = [algo.strip().lower() for algo in selected_algs]
+        selected_algs = validate_algorithms(
+            "Enter at least two algorithms separated by commas (e.g., insertion,merge,quick): ",
+            ALGORITHMS.keys(),
+            min_count=2
+        )
+
         print("Chart Type Options:")
         print("1 - Growth")
         print("2 - Number of Steps (nsteps)")
+        chart_type_input = validate_choice("Enter chart type (1 for Growth, 2 for Number of Steps): ", ["1", "2"])
 
-        # Get user input
-        user_input = input("Enter chart type (1 for Growth, 2 for Number of Steps): ").strip()
-
-        # Map input to chart types
-        if user_input == "1":
-            chart_type = "growth"
-        elif user_input == "2":
-            chart_type = "nsteps"
-        else:
-            chart_type = None
-            print("Invalid selection. Please enter 1 or 2.")
+        chart_type = "growth" if chart_type_input == "1" else "nsteps"
         compare_algorithms(data, selected_algs, chart_type)
+
     elif choice == "2":
         print("Available algorithms:", ", ".join(ALGORITHMS.keys()))
-        algorithm = input("Enter the algorithm: ").strip().lower()
+        algorithm = validate_algorithms(
+            "Enter exactly one algorithm: ",
+            ALGORITHMS.keys(),
+            exact_count=1
+        )[0]
         compare_algorithm_with_asymptotic_efficiency(data, algorithm)
-    else:
-        print("Invalid choice!")
