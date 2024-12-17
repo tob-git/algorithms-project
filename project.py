@@ -251,10 +251,14 @@ def read_data_from_file(filename):
     data = df.values.flatten().tolist()
     return data
 
-def generate_random_data(size):
-    max_val = max(1000, size * 10)
-    return [random.randint(0, max_val) for _ in range(size)]
 
+def generate_random_data(size, filename='random_nums.xlsx'):
+    max_val = max(1000, size * 10)
+    data = [random.randint(0, max_val) for _ in range(size)]
+    df = pd.DataFrame(data)
+    df.to_excel(filename, index=False, header=False)
+    print(f"Data saved to {filename}")
+    return data
 def compare_algorithms(data, selected_algs, chart_type="growth", split_points=20, gui_root=None):
     n = len(data)
     is_gui = gui_root is not None
